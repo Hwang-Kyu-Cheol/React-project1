@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
-import Article from './components/Article';
+import ReadArticle from './components/ReadArticle';
+import CreateArticle from './components/CreateArticle';
+import Control from './components/Control';
 import './App.css';
 
 class App extends React.Component {
   constructor(props){
     super(props);
+    this.max_index = 3;
     this.state = {
       mode: 'Welcome',
       subject: {
@@ -41,11 +44,12 @@ class App extends React.Component {
   }
 
   render() {
-    let _title, _desc;
+    let _title, _desc, _article;
     if(this.state.mode === 'Welcome'){
       _title = this.state.Welcome.title;
       _desc = this.state.Welcome.description;
-    } else {
+      _article = <ReadArticle title={_title} description={_desc}></ReadArticle>;
+    } else if(this.state.mode === 'Read'){
       for(let i = 0; i<this.state.contents.length; i++){
         if(this.state.contents[i].id === this.state.selected_contents){
           _title = this.state.contents[i].title;
@@ -53,6 +57,22 @@ class App extends React.Component {
           break;
         }
       }
+      _article = <ReadArticle title={_title} description={_desc}></ReadArticle>;
+    } else if(this.state.mode === 'Create'){
+      _article = <CreateArticle onCreate={function(_title, _desc){
+        this.max_index = this.max_index + 1;
+        const newArticle = {
+          id: this.max_index,
+          title: _title,
+          description: _desc
+        };
+        const grpArticle = this.state.contents.concat(newArticle);
+        this.setState(
+          {
+            contents: grpArticle
+          }
+        );
+      }.bind(this)}></CreateArticle>
     }
     return (
       <div className="App">
@@ -78,8 +98,18 @@ class App extends React.Component {
             );
           }.bind(this)}
         ></Navigation>
+        <Control
+          mode={this.state.mode}
+          onChangePage={function(_mode){
+            this.setState(
+              {
+                mode: _mode
+              }
+            )
+          }.bind(this)}
+        ></Control>
         <hr></hr>
-        <Article title={_title} description={_desc}></Article>
+        {_article}
       </div>
     );
   }  
