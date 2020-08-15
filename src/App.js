@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Navigation from './components/Navigation';
 import ReadArticle from './components/ReadArticle';
 import CreateArticle from './components/CreateArticle';
+import UpdateArticle from './components/UpdateArticle';
 import Control from './components/Control';
 import './App.css';
 
@@ -21,7 +22,7 @@ class App extends React.Component {
         description: "Welcome to Web"
       },
       selected_contents: {
-        id:0
+        id: 0
       },
       contents: [
         {
@@ -43,6 +44,17 @@ class App extends React.Component {
     };
   }
 
+  getContent(){
+    let content;
+    for(let i = 0; i<this.state.contents.length; i++){
+      if(this.state.contents[i].id === this.state.selected_contents){
+        content = this.state.contents[i];
+        break;
+      }
+    }
+    return content;
+  }
+
   render() {
     let _title, _desc, _article;
     if(this.state.mode === 'Welcome'){
@@ -50,13 +62,9 @@ class App extends React.Component {
       _desc = this.state.Welcome.description;
       _article = <ReadArticle title={_title} description={_desc}></ReadArticle>;
     } else if(this.state.mode === 'Read'){
-      for(let i = 0; i<this.state.contents.length; i++){
-        if(this.state.contents[i].id === this.state.selected_contents){
-          _title = this.state.contents[i].title;
-          _desc = this.state.contents[i].description;
-          break;
-        }
-      }
+      const content = this.getContent();
+      _title = content.title;
+      _desc = content.description;
       _article = <ReadArticle title={_title} description={_desc}></ReadArticle>;
     } else if(this.state.mode === 'Create'){
       _article = <CreateArticle onCreate={function(_title, _desc){
@@ -69,10 +77,47 @@ class App extends React.Component {
         const grpArticle = this.state.contents.concat(newArticle);
         this.setState(
           {
+            mode: 'Read',
+            selected_contents: newArticle.id,
             contents: grpArticle
           }
         );
       }.bind(this)}></CreateArticle>
+    } else if(this.state.mode === 'Update'){
+      const content = this.getContent();
+      _article = <UpdateArticle 
+        content={content} 
+        onUpdate={function(_id, _title, _desc){
+          let _contents = Array.from(this.state.contents);
+          for(let i = 0; i<_contents.length; i++){
+            if(_contents[i].id === _id){
+              _contents[i].title = _title;
+              _contents[i].description = _desc;
+            }
+          }
+          this.setState(
+            {
+              mode: 'Read',
+              contents: _contents
+            }
+          );
+        }.bind(this)}
+      ></UpdateArticle>      
+    }
+    else if(this.state.mode === 'Delete'){
+      let _contents = Array.from(this.state.contents);
+      for(let i = 0; i<_contents.length; i++){
+        if(_contents[i].id === this.state.selected_contents){
+          _contents.splice(i, 1);
+          break;
+        }
+      }
+      this.setState(
+        {
+          mode: 'Welcome',
+          contents: _contents
+        }
+      );
     }
     return (
       <div className="App">
@@ -101,6 +146,14 @@ class App extends React.Component {
         <Control
           mode={this.state.mode}
           onChangePage={function(_mode){
+            if(_mode === 'Delete'){
+              if(window.confirm('Delete?')){
+
+              } else {
+                return;
+              }
+            }
+
             this.setState(
               {
                 mode: _mode
